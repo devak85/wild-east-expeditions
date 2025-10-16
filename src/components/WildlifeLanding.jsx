@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { waLink } from "../config/whatsapp.js";
 import { motion, AnimatePresence } from "framer-motion";
 
 const TOURS = [
@@ -17,11 +18,11 @@ const TOURS = [
       "Day 4: Optional balloon safari (extra), checkout & return."
     ],
     style:{titleClass:"text-safari-700",chipClass:"bg-sand-300/90 text-safari-900"},
-    composition:"mara", // has lion overlay
+    composition:"mara",
   },
   {
     id: "ethiopia",
-    title: "ETHIOPIA", // removed "• GELADA"
+    title: "ETHIOPIA",
     dates: "OCT — FEB • SIMIEN HIGHLANDS",
     bg: "/images/ethiopia-gelada.jpg",
     species: ["Gelada","Walia Ibex","Ethiopian Wolf (region)","Lammergeier"],
@@ -37,7 +38,7 @@ const TOURS = [
   },
   {
     id: "botswana",
-    title: "BOTSWANA", // removed "• MEERKATS"
+    title: "BOTSWANA",
     dates: "MAY — SEP • KALAHARI SALT PANS",
     bg: "/images/botswana-meerkats.jpg",
     species:["Meerkats","Brown Hyena","Oryx","Bat-eared Fox"],
@@ -53,7 +54,6 @@ const TOURS = [
   },
 ];
 
-// Smooth, non-white transition
 const panelVariants = {
   enter: (direction) => ({ x: direction > 0 ? 30 : -30, opacity: 0.6 }),
   center: { x: 0, opacity: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
@@ -71,7 +71,7 @@ export default function WildlifeLanding() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden text-white font-body bg-black">
-      {/* Panel */}
+      {/* Active panel */}
       <AnimatePresence custom={direction} initial={false}>
         <motion.div
           key={active.id}
@@ -86,16 +86,18 @@ export default function WildlifeLanding() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Brand header (overlay, always visible) */}
-      <div className="absolute top-4 left-6 z-30 font-semibold tracking-widest text-white/90">
-        WILD EAST EXPEDITIONS
+      {/* Brand overlay */}
+      <div className="absolute top-4 left-6 z-30">
+        <span className="font-semibold tracking-widest text-white/90 bg-black/35 backdrop-blur-[2px] px-3 py-1.5 rounded-lg">
+          WILD EAST EXPEDITIONS
+        </span>
       </div>
 
       {/* Arrows */}
       <NavArrow side="left" label={TOURS[(index - 1 + TOURS.length) % TOURS.length].title} onClick={(e) => { e.stopPropagation(); prev(); }} />
       <NavArrow side="right" label={TOURS[(index + 1) % TOURS.length].title} onClick={(e) => { e.stopPropagation(); next(); }} />
 
-      {/* Backdrop + Sheet (click outside closes; backdrop also BLURS) */}
+      {/* Backdrop (blurs ONLY while itinerary is open) + Sheet */}
       <AnimatePresence>
         {open && (
           <>
@@ -127,7 +129,7 @@ export default function WildlifeLanding() {
               </ul>
               <div className="mt-6">
                 <a
-                  href={active.whatsapp}
+                  href={waLink(`I'm interested in the  tour (). Please share dates & pricing.`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition"
@@ -164,10 +166,6 @@ function NavArrow({ side, label, onClick }) {
 }
 
 function Panel({ tour, onOpen }) {
-  // For ETHIOPIA/BOTSWANA we always blur the photo slightly
-  const alwaysBlur = tour.id === "ethiopia" || tour.id === "botswana";
-  const photoBlur = alwaysBlur ? "blur-[1.5px]" : "";
-
   return (
     <section
       onClick={onOpen}
@@ -177,29 +175,28 @@ function Panel({ tour, onOpen }) {
       {/* Dark fallback */}
       <div className="absolute inset-0 bg-black" />
 
-      {/* Background layers */}
+      {/* Background layers (CRISP by default) */}
       <div className="absolute inset-0">
         <div
-          className={`absolute inset-0 bg-center bg-cover ${photoBlur}`}
+          className="absolute inset-0 bg-center bg-cover"
           style={{ backgroundImage: `url(${tour.bg})` }}
           aria-hidden
         />
         {tour.composition === "mara" && (
           <div
-            className={`absolute inset-0 bg-center bg-cover mix-blend-multiply opacity-90`}
+            className="absolute inset-0 bg-center bg-cover mix-blend-multiply opacity-90"
             style={{ backgroundImage: `url(${tour.overlay})` }}
             aria-hidden
           />
         )}
-        {/* Gradient & vignette */}
         <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-black/20 to-transparent" />
         <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(0,0,0,0.65)] pointer-events-none" />
       </div>
 
       {/* Foreground content */}
       <div className="relative z-10 h-full flex flex-col">
-        <header className="p-6 flex items-center justify-between">
-          <div className="font-semibold tracking-widest text-white/90">WILD EAST EXPEDITIONS</div>
+        <header className="p-6">
+          <span className="sr-only">Wild East Expeditions</span>
         </header>
 
         <div className="flex-1 flex items-center px-6 md:px-16 lg:px-24">
@@ -227,5 +224,20 @@ function Panel({ tour, onOpen }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// Floating WhatsApp button (optional)
+function FloatingWhatsApp() {
+  return (
+    <a
+      href={waLink("Hi! I came from the website and would like to know about upcoming departures.")}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed z-50 bottom-4 right-4 rounded-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold shadow-lg"
+      aria-label="Chat on WhatsApp"
+    >
+      WhatsApp
+    </a>
   );
 }
